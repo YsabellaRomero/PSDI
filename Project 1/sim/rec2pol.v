@@ -50,17 +50,17 @@ module rec2pol(
 
 //Registers
 
-reg[33:0]			xr,
-					yr,
-					zr;
+reg[33:0]			xr, //Register for X after aritmetic operations
+					yr, //Register for Y after aritmetic operations
+					zr; //Register for angle after aritimetic operations
 
 reg[31:0]			aux_32d0;
 	
 //Local wires
 wire[5:0]			count;
 
-wire[33:0]			sr1,
-					sr2,
+wire[33:0]			sr1, //Wire of X to the mux
+					sr2, //Wire of Y to the mux
 					add_sub1,
 					mux1,
 					add_sub2,
