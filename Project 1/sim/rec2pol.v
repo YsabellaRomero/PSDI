@@ -49,14 +49,15 @@ module rec2pol(
 // ADD YOUR RTL CODE HERE	
 
 //Registers
-
 reg[33:0]			xr,
 					yr,
 					zr;
 
 reg[31:0]			aux_32d0;
-	
+
+
 //Local wires
+
 wire[5:0]			count;
 
 wire[33:0]			sr1,
@@ -94,6 +95,8 @@ assign Qn3 = zr - data;
 assign add_sub3 = yr ? Qp3 : Qn3;				
 assign mux1 = start ? aux_32d0 : add_sub3;		
 
+assign angle = zr;
+
 //-----------------------------------------------------------------------------
 // Instantiation of the ATAN_ROM module:		
 ATAN_ROM 
@@ -105,6 +108,7 @@ ATAN_ROM
 			.data(data)
 		);
 
+assign addr = count;
 //-----------------------------------------------------------------------------
 
 // Instantiation of the ITERCOUNTER module:		
@@ -117,6 +121,7 @@ ITERCOUNTER
 			.enable(enable),
 			.count(count)
 		);
+
 //-----------------------------------------------------------------------------
 
 // Instantiation of the MODSCALE module:		
@@ -132,34 +137,41 @@ MODSCALE
 
 
 //flip-flop 1
-always @(posedge start or posedge clock)  
+always @(posedge reset or posedge clock)  
 begin
 	if (reset)
-		xr <= 0;
+		xr <= 32'd0;
 	
 	else
 		xr <= mux1;
 end
 
 //flip-flop 2
-always @(posedge start or posedge clock)  
+always @(posedge reset or posedge clock)  
 begin
 	if (reset)
-		yr <= 0;
+		yr <= 32'd0;
 	
 	else
 		yr <= mux2;
 end
 
 //flip-flop 3
-always @(posedge start or posedge clock)  
+always @(posedge reset or posedge clock)  
 begin
 	if (reset)
-		zr <= 0;
+		zr <= 32'd0;
 	
 	else
 		zr <= mux3;
 end
 		   
+//ITERCOUNTER
+always @(posedge start or posedge enable)
+begin
+	if (enable)
+		count = enable;
+end
+
 endmodule
 // end of module rec2pol
