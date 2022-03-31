@@ -1,4 +1,3 @@
-
 /*
     Master in Electrical and Computer Engineering - FEUP
 	
@@ -31,7 +30,6 @@
 	Its utilization beyond the scope of the course Digital Systems Design
 	(Projeto de Sistemas Digitais) of the Integrated Master in Electrical 
 	and Computer Engineering requires explicit authorization from the author.
-	
 */
 
 module rec2pol( 
@@ -53,77 +51,105 @@ reg[33:0]			xr,
 					yr,
 					zr;
 
-reg[31:0]			aux_32d0;
-
+reg[5:0]			count;
 
 //Local wires
 
-wire[5:0]			count;
-
 wire[33:0]			sr1,
 					sr2,
-					add_sub1,
-					mux1,
-					add_sub2,
-					mux2,
-					Qp1,
-					Qn1,
-					Qp2,
-					Qn2;
+					FF1,
+					FF2;
 
 wire[31:0]			data,
-					add_sub3,
-					mux3,
-					Qp3,
-					Qn3;
+					FF3;
+
+wire[5:0]			addr;
 
 
-assign sr1 = yr >>> count;						//arithmetic shift 
-assign Qp1 = xr + sr1;							//sum
-assign Qn1 = xr - sr1;							//sub
-assign add_sub1 = yr ? Qp1 : Qn1;				//mux for add or sub
-assign mux1 = start ? x : add_sub1;				//'final' mux
+assign sr1 = yr >>> count;							//arithmetic shift 
+assign sr2 = xr >>> count;							//arithmetic shift 						
+				
 
-assign sr2 = xr >>> count;						
-assign Qp2 = xr + sr2;							
-assign Qn2 = xr - sr2;							
-assign add_sub2 = yr ? Qp2 : Qn2;				
-assign mux2 = start ? y : add_sub2;				
-
-assign Qp3 = zr + data;							
-assign Qn3 = zr - data;							
-assign add_sub3 = yr ? Qp3 : Qn3;				
-assign mux1 = start ? aux_32d0 : add_sub3;		
+//Flip-Flops
+always @(posedge clock)  
+begin
+	if (enable)
+		xr <= FF1;
+		yr <= FF2;
+		zr <= FF3;
+end
 
 assign angle = zr;
 
 //-----------------------------------------------------------------------------
+// Instantiation of the sum_sub_mux module:	
+sum_sub1 upper(
+			.A(xr),
+			.B(sr1),
+			.x_y(x),
+			.yr(yr[33]),
+			.start(start),
+			.mux(FF1)
+		);
+				
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Instantiation of the sum_sub_mux module:	
+sum_sub1 down(
+			.A(yr),
+			.B(sr2),
+			.x_y(y),
+			.yr(~yr[33]),
+			.start(start),
+			.mux(FF2)
+		);
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// Instantiation of the sum_sub_mux_ATAN module:	
+sum_sub2 
+			#( .aux(32'd0)
+			)
+
+		sub3 (
+			.A(data),
+			.B(data),
+			.yr(yr[33]),
+			.start(start),
+			.mux(FF3)
+		);
+//-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
 // Instantiation of the ATAN_ROM module:		
-ATAN_ROM 
-			#( .ROMSIZE(32)
+ATAN_ROM #( .ROMSIZE(32)
 		    )
 
 		atan_1 (
 			.addr(count),
 			.data(data)
 		);
-
-assign addr = count;
 //-----------------------------------------------------------------------------
 
+
+//-----------------------------------------------------------------------------
 // Instantiation of the ITERCOUNTER module:		
-ITERCOUNTER 
-		
-		iter_1 (  
+ITERCOUNTER iter_1 (  
 			.clock(clock),
 			.reset(reset),
 			.start(start),
 			.enable(enable),
-			.count(count)
+			.count(addr)
 		);
 
 //-----------------------------------------------------------------------------
 
+
+//-----------------------------------------------------------------------------
 // Instantiation of the MODSCALE module:		
 MODSCALE 
 			#( .CORDIC_SCALE_FACTOR(50'd159188) 
@@ -134,44 +160,8 @@ MODSCALE
 			.MODUL(mod)
 		);
 //-----------------------------------------------------------------------------
-
-
-//flip-flop 1
-always @(posedge reset or posedge clock)  
-begin
-	if (reset)
-		xr <= 32'd0;
-	
-	else
-		xr <= mux1;
-end
-
-//flip-flop 2
-always @(posedge reset or posedge clock)  
-begin
-	if (reset)
-		yr <= 32'd0;
-	
-	else
-		yr <= mux2;
-end
-
-//flip-flop 3
-always @(posedge reset or posedge clock)  
-begin
-	if (reset)
-		zr <= 32'd0;
-	
-	else
-		zr <= mux3;
-end
-		   
-//ITERCOUNTER
-always @(posedge start or posedge enable)
-begin
-	if (enable)
-		count = enable;
-end
+		
 
 endmodule
+
 // end of module rec2pol
