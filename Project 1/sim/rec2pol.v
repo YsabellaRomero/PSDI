@@ -48,10 +48,9 @@ module rec2pol(
 
 //Registers
 reg[33:0]			xr,
-					yr,
-					zr;
+					yr;
 
-reg[5:0]			count;
+reg[31:0]			zr;
 
 //Local wires
 
@@ -66,9 +65,8 @@ wire[31:0]			data,
 wire[5:0]			addr;
 
 
-assign sr1 = yr >>> count;							//arithmetic shift 
-assign sr2 = xr >>> count;							//arithmetic shift 						
-				
+assign sr1 = yr >>> addr;							//arithmetic shift 
+assign sr2 = xr >>> addr;							//arithmetic shift 						
 
 //Flip-Flops
 always @(posedge clock)  
@@ -115,7 +113,7 @@ sum_sub2
 			)
 
 		sub3 (
-			.A(data),
+			.A(zr),
 			.B(data),
 			.yr(yr[33]),
 			.start(start),
@@ -130,11 +128,12 @@ ATAN_ROM #( .ROMSIZE(32)
 		    )
 
 		atan_1 (
-			.addr(count),
+			.addr(addr),
 			.data(data)
 		);
 //-----------------------------------------------------------------------------
 
+//assign addr = countß;
 
 //-----------------------------------------------------------------------------
 // Instantiation of the ITERCOUNTER module:		
@@ -160,7 +159,7 @@ MODSCALE
 			.MODUL(mod)
 		);
 //-----------------------------------------------------------------------------
-		
+
 
 endmodule
 
