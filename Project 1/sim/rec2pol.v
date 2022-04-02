@@ -1,4 +1,3 @@
-
 /*
     Master in Electrical and Computer Engineering - FEUP
 	
@@ -31,7 +30,6 @@
 	Its utilization beyond the scope of the course Digital Systems Design
 	(Projeto de Sistemas Digitais) of the Integrated Master in Electrical 
 	and Computer Engineering requires explicit authorization from the author.
-	
 */
 
 module rec2pol( 
@@ -49,85 +47,109 @@ module rec2pol(
 // ADD YOUR RTL CODE HERE	
 
 //Registers
+reg signed [33:0]	xr,
+					yr;
 
-reg[33:0]			xr, //Register for X after aritmetic operations
-					yr, //Register for Y after aritmetic operations
-					zr; //Register for angle after aritimetic operations
-
-reg[31:0]			aux_32d0;
-
+reg signed[31:0]	zr;
 
 //Local wires
+wire signed[33:0]	sr1,
+					sr2,
+					FF1,
+					FF2;
 
-wire[5:0]			count;
+wire signed [31:0]	data_out_rom,
+					FF3;
 
-wire[33:0]			sr1, //Wire of X to the mux
-					sr2, //Wire of Y to the mux
-					add_sub1,
-					mux1,
-					add_sub2,
-					mux2,
-					Qp1,
-					Qn1,
-					Qp2,
-					Qn2;
-
-wire[31:0]			data,
-					add_sub3,
-					mux3,
-					Qp3,
-					Qn3;
+wire  [5:0]			addr;
 
 
-assign sr1 = yr >>> count;						//arithmetic shift 
-assign Qp1 = xr + sr1;							//sum
-assign Qn1 = xr - sr1;							//sub
-assign add_sub1 = yr ? Qp1 : Qn1;				//mux for add or sub
-assign mux1 = start ? x : add_sub1;				//'final' mux
+assign sr1 = yr >>> addr;							//arithmetic shift 
+assign sr2 = xr >>> addr;							//arithmetic shift 						
 
-assign sr2 = xr >>> count;						
-assign Qp2 = xr + sr2;							
-assign Qn2 = xr - sr2;							
-assign add_sub2 = yr ? Qp2 : Qn2;				
-assign mux2 = start ? y : add_sub2;				
-
-assign Qp3 = zr + data;							
-assign Qn3 = zr - data;							
-assign add_sub3 = yr ? Qp3 : Qn3;				
-assign mux1 = start ? aux_32d0 : add_sub3;		
+//Flip-Flops
+// always @(posedge clock)  
+// begin
+// 	if (enable)
+// 		xr <= FF1;
+// 		yr <= FF2;
+// 		zr <= FF3;
+// end
 
 assign angle = zr;
 
+// //-----------------------------------------------------------------------------
+// // Instantiation of the sum_sub_mux module:	
+// sum_sub1 upper(
+// 			.A(xr),
+// 			.B(sr1),
+// 			.x_y(x),
+// 			.yr(yr[33]),
+// 			.start(start),
+// 			.mux(FF1)
+// 		);
+				
+// //-----------------------------------------------------------------------------
+
+
+// //-----------------------------------------------------------------------------
+// // Instantiation of the sum_sub_mux module:	
+// sum_sub1 down(
+// 			.A(yr),
+// 			.B(sr2),
+// 			.x_y(y),
+// 			.yr(~yr[33]), //Not of yr[33]
+// 			.start(start),
+// 			.mux(FF2)
+// 		);
+// //-----------------------------------------------------------------------------
+
+
+// //-----------------------------------------------------------------------------
+// // Instantiation of the sum_sub_mux_ATAN module:	
+// sum_sub2 
+// 			#( .aux(32'd0)
+// 			)
+
+// 		sub3 (
+// 			.A(zr),
+// 			.B(data_out_rom),
+// 			.yr(yr[33]),
+// 			.start(start),
+// 			.mux(FF3)
+// 		);
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// Instantiation of the ITERCOUNTER module:		
+ITERCOUNTER iter_1 (  
+			.clock(clock), //Sinal clock que liga a entrada do modulo .clock
+			.reset(reset), 
+			.start(start),
+			.enable(enable),
+			.count(addr) //Professor nomeou de .addr(rom_addr)
+					);
+
+//-----------------------------------------------------------------------------
+
+
 //-----------------------------------------------------------------------------
 // Instantiation of the ATAN_ROM module:		
-ATAN_ROM 
-			#( .ROMSIZE(32)
+ATAN_ROM #( .ROMSIZE(32)
 		    )
 
 		atan_1 (
-			.addr(count),
-			.data(data)
+			.addr(addr), //Professor nomeou de .addr(rom_addr)
+			.data(data_out_rom)
 		);
-
-assign addr = count;
 //-----------------------------------------------------------------------------
 
-// Instantiation of the ITERCOUNTER module:		
-ITERCOUNTER 
-		
-		iter_1 (  
-			.clock(clock),
-			.reset(reset),
-			.start(start),
-			.enable(enable),
-			.count(count)
-		);
+//assign addr = countß;
 
 //-----------------------------------------------------------------------------
-
 // Instantiation of the MODSCALE module:		
 MODSCALE 
-			#( .CORDIC_SCALE_FACTOR(50'd159188) 
+		#( .CORDIC_SCALE_FACTOR(50'd159188) 
 			)
 
 		modscal_1 (
@@ -135,44 +157,57 @@ MODSCALE
 			.MODUL(mod)
 		);
 //-----------------------------------------------------------------------------
-
-
-//flip-flop 1
-always @(posedge reset or posedge clock)  
+//Bloco da operacao do circuito do modulo
+always @(posedge clock)
+if(reset)
 begin
-	if (reset)
-		xr <= 32'd0;
-	
+	yr <= 32'd0;
+end
+else
+begin
+	if(start)
+		yr <= y; // y(input) é carregado no registo yr
 	else
-		xr <= mux1;
+		if(yr[33])
+			yr <= yr + (xr >>> addr);
+		else
+			yr <= yr - (xr >>> addr);
 end
 
-//flip-flop 2
-always @(posedge reset or posedge clock)  
+always @(posedge clock)
+if(reset)
 begin
-	if (reset)
-		yr <= 32'd0;
-	
+	xr <= 34'd0;
+end
+else
+begin
+	if(start)
+		xr <= x; // y(input) é carregado no registo yr
 	else
-		yr <= mux2;
+		if(yr[33])
+			xr <= xr - (yr >>> addr);
+		else
+			xr <= xr + (xr >>> addr);
 end
 
-//flip-flop 3
-always @(posedge reset or posedge clock)  
+reg [31:0] zr_q
+//Bloco da operacao do circuito do angulo
+always @(posedge clock)
+if(reset)
 begin
-	if (reset)
-		zr <= 32'd0;
-	
-	else
-		zr <= mux3;
+	zr <= 32'd0;
 end
-		   
-//ITERCOUNTER
-always @(posedge start or posedge enable)
+else
 begin
-	if (enable)
-		count = enable;
+	if(start)
+		zr  <= 32'd0;
+	else
+		if(yr[33])
+			zr_q <= zr - data_out_rom;
+		else
+			zr <= zr + data_out_rom;
 end
 
 endmodule
+
 // end of module rec2pol
