@@ -47,92 +47,77 @@ module rec2pol(
 // ADD YOUR RTL CODE HERE	
 
 //Registers
-reg[33:0]			xr,
-					yr;
+reg signed [33:0]			xr,
+							yr;
 
-reg[31:0]			zr;
+reg signed [31:0]			zr;
 
 //Local wires
-wire[33:0]			sr1,
-					sr2,
-					FF1,
-					FF2;
 
-wire[31:0]			data,
-					FF3;
+wire signed [33:0]			sr1,
+							sr2, 
+							xr_aux;
 
-wire[5:0]			addr;
+wire signed [31:0]			data_out_rom;
+
+wire [5:0]					addr;
 
 
 assign sr1 = yr >>> addr;							//arithmetic shift 
 assign sr2 = xr >>> addr;							//arithmetic shift 						
 
-//Flip-Flops
-always @(posedge clock)  
-begin
-	if (enable)
-		xr <= FF1;
-		yr <= FF2;
-		zr <= FF3;
-end
-
 assign angle = zr;
 
+
+/*
 //-----------------------------------------------------------------------------
 // Instantiation of the sum_sub_mux module:	
 sum_sub1 upper(
+			.start(start),
+			.enable(enable),
+			.reset(reset),
+			.clock(clock),
 			.A(xr),
 			.B(sr1),
-			.x_y(x),
 			.yr(yr[33]),
-			.start(start),
-			.mux(FF1)
+			.x_y(x),
+			.aux(xr_aux)
 		);
 				
 //-----------------------------------------------------------------------------
 
+assign xr_aux = xr;
 
 //-----------------------------------------------------------------------------
 // Instantiation of the sum_sub_mux module:	
 sum_sub1 down(
+			.start(start),
+			.enable(enable),
+			.reset(reset),
+			.clock(clock),
 			.A(yr),
 			.B(sr2),
-			.x_y(y),
 			.yr(~yr[33]),
-			.start(start),
-			.mux(FF2)
+			.x_y(y),
+			.aux(xr_aux)
 		);
 //-----------------------------------------------------------------------------
 
 
 //-----------------------------------------------------------------------------
 // Instantiation of the sum_sub_mux_ATAN module:	
-sum_sub2 
-			#( .aux(32'd0)
-			)
-
-		sub3 (
-			.A(zr),
-			.B(data),
-			.yr(yr[33]),
+sum_sub2 ss2 (
 			.start(start),
-			.mux(FF3)
+			.enable(enable),
+			.reset(reset),
+			.clock(clock),
+			.A(zr),
+			.B(data_out_rom),
+			.yr(yr[33]),
+			.angle(angle)
 		);
 //-----------------------------------------------------------------------------
-
-
-//-----------------------------------------------------------------------------
-// Instantiation of the ATAN_ROM module:		
-ATAN_ROM #( .ROMSIZE(32)
-		    )
-
-		atan_1 (
-			.addr(addr),
-			.data(data)
-		);
-//-----------------------------------------------------------------------------
-
-//assign addr = countß;
+*/
 
 //-----------------------------------------------------------------------------
 // Instantiation of the ITERCOUNTER module:		
@@ -146,18 +131,78 @@ ITERCOUNTER iter_1 (
 
 //-----------------------------------------------------------------------------
 
+//-----------------------------------------------------------------------------
+// Instantiation of the ATAN_ROM module:		
+ATAN_ROM atan_1 (
+			.addr(addr),
+			.data(data_out_rom)
+		);
+//-----------------------------------------------------------------------------
+
 
 //-----------------------------------------------------------------------------
 // Instantiation of the MODSCALE module:		
-MODSCALE 
-			#( .CORDIC_SCALE_FACTOR(50'd159188) 
-			)
-
-		modscal_1 (
+MODSCALE modscal_1 (
 			.XF(xr),
 			.MODUL(mod)
 		);
 //-----------------------------------------------------------------------------
+
+
+always@(posedge clock)
+if(reset)
+    xr <= 34'd0;
+else
+begin
+    if(enable)
+    begin
+        if(start)
+            xr <= x;
+        else
+            //yr <= yr ? (A - B) : (A + B);
+            if(yr[33])
+                xr <= xr - sr1;
+            else
+                xr <= xr + sr1;
+    end
+end
+
+always@(posedge clock)
+if(reset)
+    yr <= 34'd0;
+else
+begin
+    if(enable)
+    begin
+        if(start)
+            yr <= y;
+        else
+            //yr <= yr ? (A - B) : (A + B);
+            if(yr[33])
+                yr <= yr + sr2;
+            else
+                yr <= yr - sr2;
+    end
+end
+
+
+always@(posedge clock)
+if(reset)
+    zr <= 32'd0;
+else
+begin
+    if(enable)
+    begin
+        if(start)
+            zr <= 32'd0;
+        else
+            //yr <= yr ? (A - B) : (A + B);
+            if(yr[33])
+                zr <= zr - data_out_rom;
+            else
+                zr <= zr + data_out_rom;
+    end
+end
 
 
 endmodule
