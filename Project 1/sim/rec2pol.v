@@ -159,11 +159,7 @@ begin
         if(start)
             xr <= x;
         else
-            //yr <= yr ? (A - B) : (A + B);
-            if(yr[33])
-                xr <= xr - sr1;
-            else
-                xr <= xr + sr1;
+            xr <= yr[33] ? (xr - sr1) : (xr + sr1);
     end
 end
 
@@ -177,11 +173,7 @@ begin
         if(start)
             yr <= y;
         else
-            //yr <= yr ? (A - B) : (A + B);
-            if(yr[33])
-                yr <= yr + sr2;
-            else
-                yr <= yr - sr2;
+            yr <= yr[33] ? (yr + sr2) : (yr - sr2);
     end
 end
 
@@ -196,11 +188,7 @@ begin
         if(start)
             zr <= 32'd0;
         else
-            //yr <= yr ? (A - B) : (A + B);
-            if(yr[33])
-                zr <= zr - data_out_rom;
-            else
-                zr <= zr + data_out_rom;
+            zr <= yr[33] ? (zr - data_out_rom) : (zr + data_out_rom);
     end
 end
 
