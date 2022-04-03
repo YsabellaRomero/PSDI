@@ -53,7 +53,6 @@ reg[33:0]			xr,
 reg[31:0]			zr;
 
 //Local wires
-
 wire[33:0]			sr1,
 					sr2,
 					FF1,
