@@ -83,9 +83,10 @@ end
 
 //---------------------------------------------------
 // The verification program (THIS IS TRUE A PROGRAM!)
+integer i;
 initial
 begin
-  
+
   // Wait 10 clock periods
   #( 10*CLOCK_PERIOD );
   
@@ -93,12 +94,17 @@ begin
   execsqrt( 123456 );
 
   // Example of calling the golden sqrt function:
-  $display("%d",  golden_sqrt( 123456 ) );
+  $display("Golden: %d",  golden_sqrt( 123456 ) );
 
   $display("Groupid = %h", `GROUPID );            //tulio pergunta aos colegas o que raios é o GROUPID
 
   // COMPLETE..
-  
+  for (i=0; i<100000; i=i+5 )
+  begin
+    execsqrt( i );
+    if(sqrt != golden_sqrt(i))
+      $display("Expected Value: %d || Obtained: %d",  golden_sqrt( i ), sqrt );
+  end
   #( 10*CLOCK_PERIOD );
   $stop;  
 end
@@ -114,7 +120,7 @@ begin
   start = 1'b1;       // Assert start
   @(negedge clock );
   start = 1'b0;  
-  repeat (16) @(posedge clock);  // Execute division
+  repeat (16) @(posedge clock); 
   @(negedge clock);
   stop = 1'b1;        // Assert stop
   @(negedge clock);
@@ -124,8 +130,8 @@ begin
   // Print the results:
   // You may not watt to do this when verifying some millions of operands...
   // Add a flag to enable/disable this print
+  //$display("Final SQRT(Input:%d)=%d", x, sqrt ); // Execute division
   
-  $display("SQRT(%d) = %d", x, sqrt );
 end  
 endtask
 
