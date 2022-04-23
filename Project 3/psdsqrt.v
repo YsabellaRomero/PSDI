@@ -9,12 +9,13 @@ module psdsqrt(
 
 reg signed [31:0]   FF1;
 
-reg signed [15:0]   testsqrt,
-                    tempsqrt,
+reg signed [15:0]   tempsqrt,
                     shift_reg,
                     FF2;
 
 wire signed [31:0]  sqtestsqrt;
+
+wire signed [15:0] testsqrt;
 
 reg signed comparator;
 
@@ -61,7 +62,7 @@ begin
         sqrt <= tempsqrt;
 end
 
-
+assign testsqrt = tempsqrt | FF2;       //OR Gate
 
 always@(posedge clock)
 if(reset)
@@ -73,9 +74,6 @@ begin
     else
         FF2 <= FF2 >> 1;
 end
-
-
-assign testsqrt = tempsqrt | FF2;      //OR Gate
 
 
 endmodule
