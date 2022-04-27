@@ -46,6 +46,7 @@ psdsqrt psdsqrt_1
 		
         .xin(x),       // the operands
         .sqrt(sqrt)
+        .NBITSIN(32) //Will determine the size of the input value
         ); 
       
         

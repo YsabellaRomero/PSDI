@@ -1,10 +1,15 @@
+//Nós não determinamos o número de bits de entrada
+//Parameter for 5.1 
+parameter NBITSIN = 32;                  //Range of NBITSIN should be 4 - 64 bits
+
 module psdsqrt(
     input clock,                        //master clock rising edge
     input reset,                        //synch reset active high
     input start,                        //start a new square root, one clock cycle
     input stop,                         //load output register, one clock pulse
-    input [31:0] xin,                   //operand, unsigned integer 32 bits
-    output reg [15:0] sqrt              //sqrt(xin), unsigned integer 16 bits
+    input [NBITSIN-1:0] xin,                   //operand, unsigned integer 32 bits
+    output reg [(NBITSIN/2)-1:0] sqrt              //sqrt(xin), unsigned integer 16 bits
+    parameter NBITSIN;
 );
 
 //Local register:
@@ -20,10 +25,6 @@ wire signed [31:0]  sqtestsqrt;
 wire signed [15:0] testsqrt;
 
 
-//Parameter for 5.1
-parameter NBITSIN = 4;
-
-
 //---------------------------------------------------
 // Square (result of 32 bits)
 assign sqtestsqrt = testsqrt * testsqrt;        
@@ -36,7 +37,7 @@ if(reset)
     FF1 <= 32'h0000;                    
 else
 begin
-    if(start & $bits(xin) > NBITSIN && $bits(xin) < NBITSIN + 60)           //verifies if the number of bits of 
+    if(start && ($bits(xin) > NBITSIN) && ($bits(xin) < 64))       //verifies if the number of bits of 
     begin                                                                   //is > 4 and < 64 --> 5.1
         //$display("SIZE OF XIN: %d", xin); 
         FF1 <= xin;
