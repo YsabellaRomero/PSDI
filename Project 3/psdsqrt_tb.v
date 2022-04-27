@@ -15,6 +15,12 @@ Lab 1 - Design and verification of a sequential square root calculator
 
 module psdsqrt_tb;
  
+initial
+begin
+  $dumpfile("mysimdata.vcd");// The filename with the waveform data
+  $dumpvars(0, psdsqrt_tb ); // The root node to dump end
+end
+
 // general parameters 
 parameter CLOCK_PERIOD = 10;              // Clock period in ns
 parameter MAX_SIM_TIME = 100_000_000;     // Set the maximum simulation time (time units=ns)
@@ -96,9 +102,11 @@ begin
   // Example of calling the golden sqrt function:
   $display("Golden: %d",  golden_sqrt( 123456 ) );
 
-  $display("Groupid = %h", `GROUPID );            //tulio pergunta aos colegas o que raios é o GROUPID
+  //$display("Groupid = %h", `GROUPID );            //what
 
-  // COMPLETE..
+  //---------------------------------------------------
+  // TESTS FOR CHECKING THE RESULT 
+  /*
   for (i=0; i<100000; i=i+5 )
   begin
     execsqrt( i );
@@ -107,6 +115,7 @@ begin
   end
   #( 10*CLOCK_PERIOD );
   $stop;  
+  */
 end
 
 

@@ -7,39 +7,54 @@ module psdsqrt(
     output reg [15:0] sqrt              //sqrt(xin), unsigned integer 16 bits
 );
 
+//Local register:
 reg signed [31:0]   FF1;
-
 reg signed [15:0]   tempsqrt,
                     shift_reg,
                     FF2;
+reg signed          comparator;
 
+
+//Local wires:
 wire signed [31:0]  sqtestsqrt;
-
 wire signed [15:0] testsqrt;
 
-reg signed comparator;
 
-assign sqtestsqrt = testsqrt * testsqrt;        //WARNING: verificar se o resultado é de 32 bits ou 16 bits 
+//Parameter for 5.1
+parameter NBITSIN = 4;
 
-always@(posedge clock)                  //Initial flip-flop
+
+//---------------------------------------------------
+// Square (result of 32 bits)
+assign sqtestsqrt = testsqrt * testsqrt;        
+
+
+//---------------------------------------------------
+// Initial flip-flop:
+always@(posedge clock)                         
 if(reset)
-    FF1 <= 32'h0000;                    //confirma com os colegas tulio
+    FF1 <= 32'h0000;                    
 else
 begin
-    if(start)
+    if(start & $bits(xin) > NBITSIN && $bits(xin) < NBITSIN + 60)           //verifies if the number of bits of 
+    begin                                                                   //is > 4 and < 64 --> 5.1
+        //$display("SIZE OF XIN: %d", xin); 
         FF1 <= xin;
+    end
 end
 
 
-
+//---------------------------------------------------
+// Comparator
 always @*
-if (FF1 >= sqtestsqrt)                  //A >= B WARNING: o sqtestsqrt pode dar problemas por ser um wire 
+if (FF1 >= sqtestsqrt)                  //A >= B 
     comparator <= 1;
 else
     comparator <= 0;
 
 
-
+//---------------------------------------------------
+// Flip-flop with 2 multiplexers (left input for the OR Gate)
 always@(posedge clock)
 if(reset)
     tempsqrt <= 16'h0000;
@@ -52,7 +67,8 @@ begin
 end
 
 
-
+//---------------------------------------------------
+// Flip-flop with stop as enable
 always@(posedge clock)
 if(reset)
     sqrt <= 16'h0000;
@@ -62,15 +78,21 @@ begin
         sqrt <= tempsqrt;
 end
 
-assign testsqrt = tempsqrt | FF2;       //OR Gate
 
+//---------------------------------------------------
+// OR Gate
+assign testsqrt = tempsqrt | FF2;       
+
+
+//---------------------------------------------------
+// Flip-flop with multiplexer & shift register (right input for the OR Gate)
 always@(posedge clock)
 if(reset)
     sqrt <= 16'h0000;
 else
 begin
-    if(start)                           //perguntar se o enable deste flip flop é o start
-        FF2  <= 16'h8000;               //perguntar como trataram deste lado do circuito tulio
+    if(start)                           
+        FF2  <= 16'h8000;               
     else
         FF2 <= FF2 >> 1;
 end
