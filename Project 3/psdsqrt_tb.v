@@ -25,20 +25,29 @@ end
 parameter CLOCK_PERIOD = 10;              // Clock period in ns
 parameter MAX_SIM_TIME = 100_000_000;     // Set the maximum simulation time (time units=ns)
 
+//Parameters defined by the user
+parameter NBITSIN_tb = 32;                       //alínea 5.1
+parameter k_tb = 19;                             //alínea 5.2  
+
 
 // Registers for driving the inputs:
 reg  clock, reset;
 reg  start, stop;
-reg  [31:0] x;
+reg  [NBITSIN_tb-1:0] x;
 
 // Wires to connect to the outputs:
-wire [15:0] sqrt;
+wire [(NBITSIN_tb/2)-1:0] sqrt;
 
 
 // Instantiate the module under verification:
-psdsqrt psdsqrt_1
+psdsqrt 
+        #( .NBITSIN( NBITSIN_tb ),              //alínea 5.1
+           .k( k_tb )                           //alínea 5.2
+        )
+
+      psdsqrt_1
       ( 
-	    .clock(clock), // master clock, active in the positive edge
+	      .clock(clock), // master clock, active in the positive edge
         .reset(reset), // master reset, synchronous and active high
 		
         .start(start), // set to 1 during one clock cycle to start a sqrt
@@ -46,7 +55,7 @@ psdsqrt psdsqrt_1
 		
         .xin(x),       // the operands
         .sqrt(sqrt)
-        ); 
+      ); 
       
         
 //---------------------------------------------------
@@ -97,25 +106,30 @@ begin
   #( 10*CLOCK_PERIOD );
   
   // Example of calling task 'execsqrt':
+  //execsqrt( 123456 );
   execsqrt( 123456 );
 
   // Example of calling the golden sqrt function:
-  $display("Golden: %d",  golden_sqrt( 123456 ) );
+  $display("Golden: %d, sqrt = %d",  golden_sqrt( 123456 ), sqrt );
 
-  //$display("Groupid = %h", `GROUPID );            //what
+  //$display("Groupid = %h", `GROUPID );            
 
   //---------------------------------------------------
   // TESTS FOR CHECKING THE RESULT 
   /*
-  for (i=0; i<100000; i=i+5 )
+  for (i=0; i<100000; i=i+1 )
   begin
     execsqrt( i );
     if(sqrt != golden_sqrt(i))
-      $display("Expected Value: %d || Obtained: %d",  golden_sqrt( i ), sqrt );
+      $display("Expected Value: %d || Obtained: %d",  golden_sqrt( i ), sqrt);
+      //$display("%f", sqrt);
   end
+
+  //$display("Tudo pronto");
+  */
   #( 10*CLOCK_PERIOD );
   $stop;  
-  */
+  
 end
 
 
