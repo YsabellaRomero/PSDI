@@ -27,16 +27,16 @@ parameter MAX_SIM_TIME = 100_000_000;     // Set the maximum simulation time (ti
 
 //Parameters defined by the user
 parameter NBITSIN_tb = 32;                       //alínea 5.1
-parameter k_tb = 19;                             //alínea 5.2  
+parameter k_tb = 20;                             //alínea 5.2  
 
 
 // Registers for driving the inputs:
 reg  clock, reset;
 reg  start, stop;
-reg  [NBITSIN_tb-1:0] x;
+reg  [NBITSIN_tb+k_tb-1:0] x;
 
 // Wires to connect to the outputs:
-wire [(NBITSIN_tb/2)-1:0] sqrt;
+wire [((NBITSIN_tb+k_tb)/2)-1:0] sqrt;
 
 
 // Instantiate the module under verification:
@@ -117,7 +117,7 @@ begin
   //---------------------------------------------------
   // TESTS FOR CHECKING THE RESULT 
   /*
-  for (i=0; i<100000; i=i+1 )
+  for (i=0; i<100000; i=i+1)
   begin
     execsqrt( i );
     if(sqrt != golden_sqrt(i))
@@ -125,7 +125,7 @@ begin
       //$display("%f", sqrt);
   end
 
-  //$display("Tudo pronto");
+  $display("Tudo pronto");
   */
   #( 10*CLOCK_PERIOD );
   $stop;  
@@ -143,7 +143,7 @@ begin
   start = 1'b1;       // Assert start
   @(negedge clock );
   start = 1'b0;  
-  repeat (16) @(posedge clock); 
+  repeat (NBITSIN_tb/2) @(posedge clock); 
   @(negedge clock);
   stop = 1'b1;        // Assert stop
   @(negedge clock);

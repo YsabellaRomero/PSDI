@@ -17,20 +17,20 @@ input clock;
 input reset;                      
 input start;                        
 input stop;                         
-input [NBITSIN-1:0] xin;                   
-output reg [(NBITSIN/2)-1:0] sqrt;
+input [NBITSIN+k-1:0] xin;                   
+output reg [((NBITSIN+k)/2)-1:0] sqrt;
 
-//Local register:
-reg signed [NBITSIN-1:0]        FF1;
-reg signed [(NBITSIN/2)-1:0]    tempsqrt,
+//Local register
+reg signed [NBITSIN+k-1:0]        FF1;
+reg signed [((NBITSIN+k)/2)-1:0]    tempsqrt,
                                 shift_reg,
                                 FF2;
 reg signed                      comparator;
 
 
-//Local wires:
-wire signed [NBITSIN-1:0]  sqtestsqrt;
-wire signed [(NBITSIN/2)-1:0] testsqrt;
+//Local wires
+wire signed [NBITSIN+k-1:0]  sqtestsqrt;
+wire signed [((NBITSIN+k)/2)-1:0] testsqrt;
 
 
 //---------------------------------------------------
