@@ -107,11 +107,11 @@ assign testsqrt = tempsqrt | FF2;                               //testsqrt has 2
 //---------------------------------------------------
 // Flip-flop with multiplexer & shift register (right input for the OR Gate)
 always@(posedge clock)
-/*
+
 if(reset)
-    sqrt <= {(NBITSIN)/2){1'b0}};
+    sqrt <= {(((NBITSIN+k)/2)){1'b0}};
 else
-*/
+
 begin
     if(start)                       
         FF2  <= {1'b1, {(((NBITSIN+k)/2)-1){1'b0}}};                                             
