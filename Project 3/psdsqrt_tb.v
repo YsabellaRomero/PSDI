@@ -18,8 +18,9 @@ module psdsqrt_tb;
 initial
 begin
   $dumpfile("mysimdata.vcd");// The filename with the waveform data
-  $dumpvars(0, psdsqrt_tb ); // The root node to dump end
+  $dumpvars(0, psdsqrt_tb); // The root node to dump end
 end
+
 
 // general parameters 
 parameter CLOCK_PERIOD = 10;              // Clock period in ns
@@ -27,7 +28,7 @@ parameter MAX_SIM_TIME = 100_000_000;     // Set the maximum simulation time (ti
 
 //Parameters defined by the user
 parameter NBITSIN_tb = 32;                       //alínea 5.1
-parameter k_tb = 20;                             //alínea 5.2  
+parameter k_tb = 8;                              //alínea 5.2  
 
 
 // Registers for driving the inputs:
@@ -36,12 +37,26 @@ reg  start, stop;
 reg  [NBITSIN_tb+k_tb-1:0] x;
 
 // Wires to connect to the outputs:
-wire [((NBITSIN_tb+k_tb)/2)-1:0] sqrt;
+wire [((NBITSIN_tb)/2)-1:0] sqrt;
+//wire start, stop, busy;                         //alínea 5.3
+/*
+ext_controller #(.NBITSIN(NUM_BITS)
+              ) 
 
+      ext_controller_1    
+		  ( 		
+          .run(run),
+				  .clock(clock), 
+				  .reset(reset),
+				  .busy(busy),
+				  .start(start),
+				  .stop(stop)
+			);
+
+*/
 
 // Instantiate the module under verification:
-psdsqrt 
-        #( .NBITSIN( NBITSIN_tb ),              //alínea 5.1
+psdsqrt #( .NBITSIN( NBITSIN_tb ),              //alínea 5.1
            .k( k_tb )                           //alínea 5.2
         )
 
@@ -104,31 +119,31 @@ begin
 
   // Wait 10 clock periods
   #( 10*CLOCK_PERIOD );
-  
-  // Example of calling task 'execsqrt':
-  //execsqrt( 123456 );
+
   execsqrt( 123456 );
+  $display("Golden: %d, sqrt = %d",  golden_sqrt( 123456 ), sqrt);  
 
-  // Example of calling the golden sqrt function:
-  $display("Golden: %d, sqrt = %d",  golden_sqrt( 123456 ), sqrt );
+  execsqrt( 109876 );
+  $display("Golden: %d, sqrt = %d",  golden_sqrt( 109876 ), sqrt);  
 
-  //$display("Groupid = %h", `GROUPID );            
+  execsqrt( 543210 );
+  $display("Golden: %d, sqrt = %d",  golden_sqrt( 543210 ), sqrt);  
 
-  //---------------------------------------------------
-  // TESTS FOR CHECKING THE RESULT 
-  /*
-  for (i=0; i<100000; i=i+1)
-  begin
-    execsqrt( i );
-    if(sqrt != golden_sqrt(i))
-      $display("Expected Value: %d || Obtained: %d",  golden_sqrt( i ), sqrt);
-      //$display("%f", sqrt);
-  end
+  execsqrt( 12 );
+  $display("Golden: %d, sqrt = %d",  golden_sqrt( 12 ), sqrt);  
 
-  $display("Tudo pronto");
-  */
+  execsqrt( 13 );
+  $display("Golden: %d, sqrt = %d",  golden_sqrt( 13 ), sqrt);  
+
+  execsqrt( 1057 );
+  $display("Golden: %d, sqrt = %d",  golden_sqrt( 1057 ), sqrt);  
+
+  execsqrt( 4291 );
+  $display("Golden: %d, sqrt = %d",  golden_sqrt( 4291 ), sqrt);  
+       
   #( 10*CLOCK_PERIOD );
   $stop;  
+  //$finish
   
 end
 
@@ -136,25 +151,22 @@ end
 //---------------------------------------------------
 // Simulate the sequential controller to perform a square root.
 task execsqrt;
-input [31:0] xin;
+input [NBITSIN_tb:0] xin;
 begin
   x = xin;   // Apply operands
+
+
   @(negedge clock);
   start = 1'b1;       // Assert start
   @(negedge clock );
   start = 1'b0;  
-  repeat (NBITSIN_tb/2) @(posedge clock); 
+  repeat ((NBITSIN_tb+k_tb)/2) @(posedge clock);                                 //alterado
   @(negedge clock);
   stop = 1'b1;        // Assert stop
   @(negedge clock);
   stop = 1'b0;
   @(negedge clock);
-  
-  // Print the results:
-  // You may not watt to do this when verifying some millions of operands...
-  // Add a flag to enable/disable this print
-  //$display("Final SQRT(Input:%d)=%d", x, sqrt ); // Execute division
-  
+
 end  
 endtask
 
