@@ -14,13 +14,14 @@ Lab 1 - Design and verification of a sequential square root calculator
 `timescale 1ns / 1ns
 
 module psdsqrt_tb;
- 
+
+/* 
 initial
 begin
   $dumpfile("mysimdata.vcd");// The filename with the waveform data
-  $dumpvars(0, psdsqrt_tb); // The root node to dump end
+  $dumpvars(0, ext_controller_1); // The root node to dump end
 end
-
+*/
 
 // general parameters 
 parameter CLOCK_PERIOD = 10;              // Clock period in ns
@@ -33,14 +34,21 @@ parameter k_tb = 8;                              //alínea 5.2
 
 // Registers for driving the inputs:
 reg  clock, reset;
-reg  start, stop;
-reg  [NBITSIN_tb+k_tb-1:0] x;
+//reg  start, stop;
+reg  [NBITSIN_tb-1:0] x;
 
 // Wires to connect to the outputs:
-wire [((NBITSIN_tb)/2)-1:0] sqrt;
-//wire start, stop, busy;                         //alínea 5.3
+wire [(NBITSIN_tb/2)-1:0] sqrt;
+
+
+//----------------------------------------------------
+//alínea 5.3
+reg busy, start, stop;
+reg run;                        
+
 /*
-ext_controller #(.NBITSIN(NUM_BITS)
+ext_controller #( .NBITSIN(NBITSIN_tb),
+                  .k( k_tb ) 
               ) 
 
       ext_controller_1    
@@ -52,9 +60,7 @@ ext_controller #(.NBITSIN(NUM_BITS)
 				  .start(start),
 				  .stop(stop)
 			);
-
 */
-
 // Instantiate the module under verification:
 psdsqrt #( .NBITSIN( NBITSIN_tb ),              //alínea 5.1
            .k( k_tb )                           //alínea 5.2
@@ -79,9 +85,10 @@ initial
 begin
   clock = 1'b0;
   reset = 1'b0;
-  x = 0;
-  start = 1'b0;
-  stop  = 1'b0;
+  run = 1'b1;
+  x = 1'b0;
+  //start = 1'b0;
+  //stop  = 1'b0;
 end
 
 //---------------------------------------------------
@@ -155,7 +162,7 @@ input [NBITSIN_tb:0] xin;
 begin
   x = xin;   // Apply operands
 
-
+  
   @(negedge clock);
   start = 1'b1;       // Assert start
   @(negedge clock );
@@ -166,6 +173,14 @@ begin
   @(negedge clock);
   stop = 1'b0;
   @(negedge clock);
+  /*
+  @(posedge clock);
+  run = 1'b1;       // Assert start
+  @(posedge clock );
+  run = 1'b0;
+  @(posedge clock );  
+  while (busy) @(posedge clock);
+  */
 
 end  
 endtask
