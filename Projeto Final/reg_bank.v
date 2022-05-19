@@ -33,17 +33,23 @@ reg [31:0]  real_pos,                           // Read-only registers
             im_neg;
 
 reg [0:63]  regs_bank [3:0];                    // 16 registers with a 64 bits dimension
+reg [0:63]  regs_const [8:0];                   // 9 sets of predefined constants
 
-
+wire aux;
+            
 assign Real = inA[63:32];                       // Real part of register selwreg[i]
 assign Im = inA[31:0];                          // Imaginary part of register selwreg[i]
 
-assign real_pos  = 32'b01;                      // 1
-assign real_zero = 32'b00;                      // 0
-assign real_neg  = 32'b11;                      // -1
-assign im_pos    = 32'b01;                      // j
-assign im_zero   = 32'b00;                      // 0j
-assign im_neg    = 32'b11;                      // -j
+//Predefined constant sets
+assign regs_const[0] = {32'b01, 32'b01};                      // 1  + j
+assign regs_const[1] = {32'b00, 32'b01};                      // 0  + j
+assign regs_const[2] = {32'b11, 32'b01};                      // -1 + j
+assign regs_const[3] = {32'b01, 32'b00};                      // 1  + 0j
+assign regs_const[4] = {32'b00, 32'b00};                      // 0  + 0j
+assign regs_const[5] = {32'b11, 32'b00};                      // -1 + 0j
+assign regs_const[6] = {32'b01, 32'b11};                      // 1  - j
+assign regs_const[7] = {32'b00, 32'b11};                      // 0  - j
+assign regs_const[8] = {32'b11, 32'b11};                      // -1 - j
 
 
 //------------------------------------------------------
@@ -51,8 +57,8 @@ assign im_neg    = 32'b11;                      // -j
 always@(posedge clock)
 if ( reset )
 begin
-    Real <= 32'b0;
-    Im <= 32'b0;
+    Real <= 0;
+    Im <= 0;
     regs_bank <= 0;
 end
 
@@ -73,7 +79,7 @@ begin
             end
 
             2'b01: begin                                    // Write on imaginary part
-                regs_bank[selwreg] <= {32'B0, Im};
+                regs_bank[selwreg] <= {32'b0, Im};
             end
 
             2'b11: begin                                    // Swap high word and low word
@@ -86,19 +92,30 @@ begin
     // READ PART
     else
     begin
-        if(cnstA & cnstB)                       // Load the output ports with the predefined constants
-        begin                                   // Read register address specifies the constant to load into the output ports
+        if( enrregA )
+        begin
+            if( cnstA )                                 
+                if( seloutA > 4'b1000)
+                begin
+                    aux <= seloutA - 9;
+                    outA <= regs_const[aux];            // Load the output port A with the predefined constant
+                end
+            
+            else
+                outA <= regs_bank[seloutA];             // Load output port A with data from register
         end
 
-        else                                    // Load output ports with data from registers
-        begin
-            if( enrregA )
-                outA <= regs_bank[seloutA];
-            
-            if( enrregB )
-                outB <= regs_bank[seloutB];
+        if( enrregB )
+            if( cnstB )
+                if( seloutB > 4'b1000)                  
+                begin
+                    aux <= seloutB - 9;
+                    outB <= regs_const[aux];            // Load the output port B with the predefined constant
+                end
+
+            else
+                outB <= regs_bank[seloutB];             // Load output port B with data from register
         end
-    end
 end
 
 
