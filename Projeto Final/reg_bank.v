@@ -105,12 +105,13 @@ begin
         if( enrregB )
         begin
             if( cnstB )
+            begin
                 if( seloutB > 8)                  
                 begin
                     aux <= seloutB - 9;
                     outB <= regs_const[aux];                // Load the output port B with the predefined constant
                 end
-
+            end
             else
                 outB <= regs_bank[seloutB];                 // Load output port B with data from register
         end
