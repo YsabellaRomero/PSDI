@@ -94,9 +94,11 @@ end
 
 //----------------------------------------------------
 //Test the inputs and outputs of the register bank
-integer i, in_aux;
+integer i;
+reg [63:0] in_aux;
 initial
 begin
+    in_aux = 'b1010101100000000011101011100000101010110000000001110101110000000;
     //Declarar valores aleatorios para inA na mesma quantidade de registos
     //Inserir um a um dos endereços de registos com diferentes valores 
     //Verificar se no output os valores de cada um dos registos
@@ -107,11 +109,11 @@ begin
         enrregA = 1'b1;
         enrregB = 1'b1;    
         cnstA = 1'b0;
-        cnstB = 1'b0;  
-        in_aux = i*400;
+        cnstB = 1'b0; 
+        in_aux = in_aux+'b10000;
         execbr(in_aux, i);
         #10
-        $display("Expected Value: %d || Obtained: %d", in_aux, outA);
+        $display("Expected Value: %d || Obtained: %d", in_aux, outB);
     end
     $stop;
 
@@ -135,4 +137,6 @@ endtask
 
 
 endmodule
+
+
 
