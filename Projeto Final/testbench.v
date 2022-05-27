@@ -95,6 +95,7 @@ end
 //----------------------------------------------------
 //Test the inputs and outputs of the register bank
 integer i;
+reg [ 3:0] i_aux;
 reg [63:0] in_aux;
 initial
 begin
@@ -109,9 +110,10 @@ begin
         enrregA = 1'b1;
         enrregB = 1'b1;    
         cnstA = 1'b0;
-        cnstB = 1'b0; 
+        cnstB = 1'b1; 
         in_aux = in_aux+'b10000;
-        execbr(in_aux, i);
+        i_aux = i;
+        execbr(in_aux, i_aux);
         #10
         $display("Expected Value: %d || Obtained: %d", in_aux, outB);
     end
@@ -121,17 +123,17 @@ end
 
 task execbr;
 input [63:0] inA;
-input i;
+input [ 3:0] i;
 begin
   in = inA;   // Apply operands
   @(posedge clock);
   regwen = 1'b1;
   selwreg = i;
-  seloutA = i;
-  seloutB = i;
   #10
   @(negedge clock);
-  regwen = 1'b0;                
+  regwen = 1'b0;   
+  seloutA = i;
+  seloutB = i;             
 end  
 endtask
 

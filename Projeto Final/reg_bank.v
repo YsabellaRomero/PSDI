@@ -25,10 +25,8 @@ module reg_bank(
 reg [31:0]  Real,
             Im;
 
-reg [0:63]  regs_bank [3:0];                    // 16 registers with a 64 bits dimension
-wire [0:63]  regs_const [8:0];                  // 9 sets of predefined constants
-
-reg aux;
+reg [0:63]  regs_bank [15:0];                    // 16 registers with a 64 bits dimension
+wire [0:63]  regs_const [ 8:0];                  // 9 sets of predefined constants
 
 //Predefined constant sets
 assign regs_const[0] = {32'b01, 32'b01};        // 1  + j
@@ -64,6 +62,7 @@ begin
 
         Real <= inA[63:32];                       // Real part of register selwreg[i]
         Im <= inA[31:0];                          // Imaginary part of register selwreg[i]
+
 	    case ( endwreg )
             2'b00: begin                                    // Write on both data fields
                 regs_bank[selwreg] <= {Real, Im};
@@ -91,14 +90,13 @@ begin
         if( enrregA )
         begin
             if( cnstA ) 
-            begin                                
-                if( seloutA > 8)
-                begin
-                    aux <= seloutA - 9;
-                    outA <= regs_const[aux];                // Load the output port A with the predefined constant
-                end
+            begin                   
+                if( seloutA > 8 )
+                    outA <= regs_const[seloutA-9];                // Load the output port A with the predefined constant
+                else
+                    outA <= regs_const[seloutA];
             end
-            else
+            else 
                 outA <= regs_bank[seloutA];                 // Load output port A with data from register
         end
 
@@ -106,11 +104,10 @@ begin
         begin
             if( cnstB )
             begin
-                if( seloutB > 8)                  
-                begin
-                    aux <= seloutB - 9;
-                    outB <= regs_const[aux];                // Load the output port B with the predefined constant
-                end
+                if( seloutB > 8 )                  
+                    outB <= regs_const[seloutB - 9];                // Load the output port B with the predefined constant
+                else
+                    outB <= regs_const[seloutB];
             end
             else
                 outB <= regs_bank[seloutB];                 // Load output port B with data from register
