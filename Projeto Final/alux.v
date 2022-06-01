@@ -3,60 +3,79 @@ module ALUX(
                     input reset,                // Master reset, synchronous and active high
                     input [63:0] inA,           // Data input A 
                     input [63:0] inB,           // Data input B
-                    input [4:0] opr,            // Operation between data input A and data input B
+                    input [3:0] opr,            // Operation between data input A and data input B
                     input start,
                     //--- Data output ports --------------------------------------------------
                     output reg [63:0] outAB,    // Data output A, registered
                     output done
  );
 
-reg signed [31:0]   Real_A, 
+reg [31:0]   Real_A, 
                     Real_B,
                     Im_A,
                     Im_B;
 
-reg [31:0]  real_aux,
-            im_aux;
+reg         sum_sub,
+            complex_real,
+            mod_A_B;
 
-reg [63:0]  real_aux_1,
-            real_aux_2,
-            im_aux_1,
-            im_aux_2,
-            div_aux,
-            M;
+wire [63:0] out_add_sub,
+            out_mult,
+            out_div,
+            out_mod; 
 
-reg theta;
+reg [63:0]  out;
+      
+reg done_aux;
 
-assign Real_A = inA[63:32];                       // Real part of data input A
-assign Im_A = inA[31:0];                          // Imaginary part of data input A
-assign Real_B = inB[63:32];                       // Real part of data input B
-assign Im_B = inB[31:0];                          // Imaginary part of data input B
+assign done = done_aux;
 
-wire stop;
+//-------------------------------------------------------
+// Instation of modules
+sumsub sumsub_1(
+                    .clock( clock ),
+                    .reset( reset ),
+                    .Real_A( Real_A ),
+                    .Real_B( Real_B ),
+                    .Im_A( Im_A ),
+                    .Im_B( Im_B ),
+                    .sum_sub( sum_sub ),
+                    .out( out_add_sub )
+);
 
-reg [63:0]  sqrt_aux_A,
-            sqrt_aux_B;
+mult mult_1(
+                    .clock( clock ),
+                    .reset( reset ),
+                    .complex_real( complex_real ),
+                    .Real_A( Real_A ),
+                    .Real_B( Real_B ),
+                    .Im_A( Im_A ),
+                    .Im_B( Im_B ),
+                    .out( out_mult )
+);
 
-assign sqrt_aux_A = ( Real_A * Real_A ) + ( Im_A * Im_A );
-assign sqrt_aux_B = ( Real_B * Real_B ) + ( Im_B * Im_B );
+div div_1(
+                    .clock( clock ),
+                    .reset( reset ),
+                    .complex_real( complex_real ),
+                    .Real_A( Real_A ),
+                    .Real_B( Real_B ),
+                    .Im_A( Im_A ),
+                    .Im_B( Im_B ),
+                    .out( out_div )
+);
 
-sqrt_datapath  sqrt_datapath_A(
-					.clock( clock ),		// master clock
-					.reset( reset ),		// synch reset, active high
-					.start( start ),		// start a new sqrt
-					.stop( stop ),			// load output register
-					.xin( sqrt_aux_A ),		// argument
-					.sqrt( sqrt_A )	        // Square root
-				);
-
-sqrt_datapath  sqrt_datapath_B(
-					.clock( clock ),		// master clock
-					.reset( reset ),		// synch reset, active high
-					.start( start ),		// start a new sqrt
-					.stop( stop ),			// load output register
-					.xin( sqrt_aux_B ),		// argument
-					.sqrt( sqrt_B )	        // Square root
-				);
+mod mod_1(
+                    .clock( clock ),
+                    .reset( reset ),
+                    .A_B( mod_A_B ),
+                    .Real_A( Real_A ),
+                    .Real_B( Real_B ),
+                    .Im_A( Im_A ),
+                    .Im_B( Im_B ),
+                    .out( out_mod )
+);
+//-------------------------------------------------------
 
 always@(posedge clock)
 if( reset )
@@ -66,135 +85,103 @@ begin
     Im_A <= 0;
     Im_B <= 0;
     outAB <= 0;
-    real_aux <= 0;
-    im_aux <= 0;
-    M <= 0;
-    theta <= 0;
+    sum_sub <= 1;
+    complex_real <= 1;
+    mod_A_B <= 1;
+    done_aux <= 0;
 end
 else
 begin
+    Real_A = inA[63:32];                       // Real part of data input A
+    Im_A = inA[31:0];                          // Imaginary part of data input A
+    Real_B = inB[63:32];                       // Real part of data input B
+    Im_B = inB[31:0];                          // Imaginary part of data input B
+
     if ( start )
     begin
         case ( opr )
-        5'b00000: begin                                                 // A
-            outAB <= A;
+        4'b0000: begin                                                 // A
+            done_aux <= 1;
+            out <= inA;
         end
 
-        5'b00001: begin                                                 // B
-            outAB <= B;
+        4'b0001: begin                                                 // B
+            done_aux <= 1;
+            out <= inB;
         end
 
-        5'b00010: begin                                                 // A + B
-            real_aux <= Real_A + Real_B;
-            im_aux <= Im_A + Im_B;
-
-            if( done )
-                outAB <= {real_aux, im_aux};
-            
-            else    
-                outAB <= 0;
+        4'b0010: begin                                                 // A + B
+            done_aux <= 1;
+            sum_sub <= 1;
+            out <= out_add_sub;
         end
 
-        5'b00011: begin                                                 // A - B
-            real_aux <= Real_A - Real_B;
-            im_aux <= Im_A - Im_B;
-
-            if( done )
-                outAB <= {real_aux, im_aux};
-
-            else    
-                outAB <= 0;
+        4'b0011: begin                                                 // A - B
+            done_aux <= 1;
+            sum_sub <= 0;
+            out <= out_add_sub;
         end
 
-        5'b00100: begin                                                 // A * B
-            real_aux_1 <= Real_A * Real_B;                              // deve ser register ou wire?
-            real_aux_2 <= Im_A * Im_B;
-            im_aux_1 <= Real_A * Im_B;
-            im_aux_2 <= Im_A * Real_B;
-
-            real_aux <= real_aux_1[63:32] - real_aux_2[63:32];            
-            im_aux <= im_aux_1[63:32] + im_aux_2[63:32];
-
-            if( done )
-                outAB <= {real_aux, im_aux};
-
-            else    
-                outAB <= 0;
+        4'b0100: begin                                                 // A * B
+            done_aux <= 1;
+            complex_real <= 1;
+            out <= out_mult;
         end
 
-        5'b00101: begin                                                 // A / B
-            real_aux_1 <= Real_A * Real_B;                              
-            real_aux_2 <= Im_A * Im_B;
-            im_aux_1 <= Im_A * Real_B;
-            im_aux_2 <= Real_A * Im_B;
-
-            div_aux <= ( Real_B * Real_B ) + ( Im_B * Im_B );
-
-            real_aux <= ( real_aux_1 + real_aux_2 ) / div_aux[63:32];
-            im_aux <= ( im_aux_1 - im_aux_2 ) / div_aux[63:32];
-
-            if( done )
-                outAB <= {real_aux, im_aux};
-
-            else    
-                outAB <= 0;
+        4'b0101: begin                                                 // A / B
+            done_aux <= 1;
+            complex_real <= 1;
+            out <= out_div;
         end
 
-        5'b00110: begin                                                 // RE(A) * RE(B), IM(A) * IM(B)
-            real_aux_1 <= Real_A * Real_B;
-            im_aux_1 <= Im_A * Im_B;
-
-            real_aux <= real_aux_1[63:32];
-            im_aux <= im_aux_1[63:32];
-
-            if( done )
-                outAB <= {real_aux, im_aux};
-
-            else    
-                outAB <= 0;
+        4'b0110: begin                                                 // RE(A) * RE(B), IM(A) * IM(B)
+            done_aux <= 1;
+            complex_real <= 0;
+            out <= out_mult;
         end
 
-        5'b00111: begin                                                 // RE(A) / RE(B), IM(A) / IM(B)
-            
-            
+        4'b0111: begin                                                 // RE(A) / RE(B), IM(A) / IM(B)
+            done_aux <= 1;
+            complex_real <= 0;
+            out <= out_div;
+            done_aux <= 1;
         end
 
-        5'b01000: begin                                                 // A == B
-            if( Real_A == Real_B && Im_A == Im_B && done )
-                outAB <= A;
+        4'b1000: begin                                                 // A == B
+            if( Real_A == Real_B && Im_A == Im_B )
+            begin
+                done_aux <= 1;
+                out <= 64'b01;
+            end
             else
-                outAB <= 0;
+                out <= 0;
+        end
+        
+        4'b1001: begin                                                 // { MOD(A), ANG(A) }
+            done_aux <= 1;
+            mod_A_B <= 1;
+            out <= out_mod;
         end
 
-        5'b01001: begin                                                 // { MOD(A), ANG(A) }
-            M <= sqrt_A;
-            theta <= $atan2( Im_A , Real_A );
-
-            if( done )
-                outAB <= {M , theta};
-            
-            else    
-                outAB <= 0;
+        4'b1010: begin                                                 // { MOD(B), ANG(B) }
+            done_aux <= 1;
+            mod_A_B <= 0;
+            out <= out_mod;
         end
-
-        5'b01010: begin                                                 // { MOD(B), ANG(B) }
-            M <= sqrt_B;
-            theta <= $atan2( Im_B , Real_B );
-            
-            if( done )
-                outAB <= {M, theta};
-
-            else    
-                outAB <= 0;
-        end
-
+        
         default: begin
-            outAB <= 0;
+            out <= 64'b0;
         end
 
         endcase
 
+        if( done )
+        begin
+            outAB <= out;
+        end
+        
     end
 end
 
  endmodule
+

@@ -8,11 +8,11 @@ begin
   $dumpvars(0, testbench ); // The root node to dump end
 end
 
-// general parameters 
+// General parameters 
 parameter CLOCK_PERIOD = 10;              // Clock period in ns
 parameter MAX_SIM_TIME = 100_000_000;     // Set the maximum simulation time (time units=ns)
 
-reg  clock, reset, start, regwen;
+reg clock, reset, start, regwen;
 reg cnstA, cnstB, enrregA, enrregB;
 
 reg [63:0]  in;
@@ -20,45 +20,49 @@ reg [ 3:0]  selwreg;
 reg [ 1:0]  endwreg;
 
 reg [ 3:0]  seloutA,
-            seloutB;
+            seloutB,
+            opr;
 
 wire [63:0] outA,
             outB;
 
-//wire [ 3:0] opr; 
+wire done;
+
+wire [63:0] result;
+
+reg [63:0]  outA_aux,
+            outB_aux;
 
 
 reg_bank reg_bank_1(  
-            .clock( clock ), 
-            .reset( reset ), 
-            .regwen( regwen ),
-            .inA( in ),
-            .selwreg( selwreg ),
-            .endwreg( endwreg ),
-            .outA( outA ),
-            .outB( outB ),
-            .seloutA( seloutA ),
-            .seloutB( seloutB ), 
-            .cnstA( cnstA ),
-            .cnstB( cnstB ), 
-            .enrregA( enrregA ),
-            .enrregB( enrregB )
+                    .clock( clock ), 
+                    .reset( reset ), 
+                    .regwen( regwen ),
+                    .inA( in ),
+                    .selwreg( selwreg ),
+                    .endwreg( endwreg ),
+                    .outA( outA ),
+                    .outB( outB ),
+                    .seloutA( seloutA ),
+                    .seloutB( seloutB ), 
+                    .cnstA( cnstA ),
+                    .cnstB( cnstB ), 
+                    .enrregA( enrregA ),
+                    .enrregB( enrregB )
 
 );
 
-/*
+
 ALUX ALUX_1(
                     .clock(clock),              
                     .reset(reset),             
-                    .inA(outA),            
-                    .inB(outB),                  
+                    .inA(outA_aux),            
+                    .inB(outB_aux),                  
                     .opr(opr),                   
                     .start(start),          
                     .outAB(result),                    
                     .done(done)
  );
-*/
-
 
 
 //---------------------------------------------------
@@ -67,17 +71,18 @@ initial
 begin
   clock = 1'b0;
   reset = 1'b0;
-  start = 1'b0;
+  start = 1'b1;
   in_aux = 64'b0;
   regwen = 1'b0;
   cnstA = 1'b0;
   cnstB = 1'b0;
   enrregA = 1'b0;
   enrregB = 1'b0;
+  opr = 4'b1001;          // 0000 = A; 0001 = B; 0010 = sum; 0011 = sub; ...
 end
 
 //---------------------------------------------------
-// generate a 50% duty-cycle clock signal
+// Generate a 50% duty-cycle clock signal
 initial
 begin  
     forever
@@ -93,16 +98,14 @@ begin
 end
 
 //----------------------------------------------------
-//Test the inputs and outputs of the register bank
+// Test the inputs and outputs of the register bank
 integer i;
 reg [ 3:0] i_aux;
 reg [63:0] in_aux;
 initial
 begin
-    in_aux = 'b1010101100000000011101011100000101010110000000001110101110000000;
-    //Declarar valores aleatorios para inA na mesma quantidade de registos
-    //Inserir um a um dos endereços de registos com diferentes valores 
-    //Verificar se no output os valores de cada um dos registos
+    in_aux = 12321978053717715840;
+
     for (i=0; i<16; i=i+1)
     begin
         #10
@@ -110,12 +113,15 @@ begin
         enrregA = 1'b1;
         enrregB = 1'b1;    
         cnstA = 1'b0;
-        cnstB = 1'b1; 
-        in_aux = in_aux+'b10000;
+        cnstB = 1'b0; 
+        opr = 4'b0000;            // 0000 = A; 0001 = B; 0010 = sum; 0011 sub; ...
         i_aux = i;
         execbr(in_aux, i_aux);
         #10
-        $display("Expected Value: %d || Obtained: %d", in_aux, outB);
+        outA_aux = outA;
+        outB_aux = outB;
+        $display("Obtained: %d", result);
+        in_aux = in_aux+'b10000;
     end
     $stop;
 
@@ -125,7 +131,7 @@ task execbr;
 input [63:0] inA;
 input [ 3:0] i;
 begin
-  in = inA;   // Apply operands
+  in = inA;               // Apply operands
   @(posedge clock);
   regwen = 1'b1;
   selwreg = i;
