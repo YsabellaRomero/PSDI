@@ -51,8 +51,8 @@ end
 else
 begin
 
-    sqrt_aux_A = ( Real_A * Real_A ) + ( Im_A * Im_A );
-    sqrt_aux_B = ( Real_B * Real_B ) + ( Im_B * Im_B );
+    sqrt_aux_A <= ( Real_A * Real_A ) + ( Im_A * Im_A );
+    sqrt_aux_B <= ( Real_B * Real_B ) + ( Im_B * Im_B );
 
     if( A_B )
     begin

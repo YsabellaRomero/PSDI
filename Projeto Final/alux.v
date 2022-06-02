@@ -92,10 +92,10 @@ begin
 end
 else
 begin
-    Real_A = inA[63:32];                       // Real part of data input A
-    Im_A = inA[31:0];                          // Imaginary part of data input A
-    Real_B = inB[63:32];                       // Real part of data input B
-    Im_B = inB[31:0];                          // Imaginary part of data input B
+    Real_A <= inA[63:32];                       // Real part of data input A
+    Im_A <= inA[31:0];                          // Imaginary part of data input A
+    Real_B <= inB[63:32];                       // Real part of data input B
+    Im_B <= inB[31:0];                          // Imaginary part of data input B
 
     if ( start )
     begin
