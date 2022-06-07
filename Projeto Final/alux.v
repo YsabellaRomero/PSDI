@@ -142,8 +142,7 @@ begin
         if( done )
         begin
             outAB <= out;
-        end
-        
+        end 
     end
 end
 
