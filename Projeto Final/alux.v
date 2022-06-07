@@ -26,9 +26,6 @@ wire [63:0] out_add_sub,
 
 reg [63:0]  out;
       
-reg done_aux;
-
-assign done = done_aux;
 
 //-------------------------------------------------------
 // Instation of modules
@@ -40,6 +37,7 @@ sumsub sumsub_1(
                     .Im_A( Im_A ),
                     .Im_B( Im_B ),
                     .sum_sub( sum_sub ),
+                    .done( done ),
                     .out( out_add_sub )
 );
 
@@ -51,18 +49,8 @@ mult mult_1(
                     .Real_B( Real_B ),
                     .Im_A( Im_A ),
                     .Im_B( Im_B ),
+                    .done( done ),
                     .out( out_mult )
-);
-
-div div_1(
-                    .clock( clock ),
-                    .reset( reset ),
-                    .complex_real( complex_real ),
-                    .Real_A( Real_A ),
-                    .Real_B( Real_B ),
-                    .Im_A( Im_A ),
-                    .Im_B( Im_B ),
-                    .out( out_div )
 );
 
 mod mod_1(
@@ -73,6 +61,7 @@ mod mod_1(
                     .Real_B( Real_B ),
                     .Im_A( Im_A ),
                     .Im_B( Im_B ),
+                    .done( done ),
                     .out( out_mod )
 );
 //-------------------------------------------------------
@@ -88,7 +77,6 @@ begin
     sum_sub <= 1;
     complex_real <= 1;
     mod_A_B <= 1;
-    done_aux <= 0;
 end
 else
 begin
@@ -101,70 +89,46 @@ begin
     begin
         case ( opr )
         4'b0000: begin                                                 // A
-            done_aux <= 1;
             out <= inA;
         end
 
         4'b0001: begin                                                 // B
-            done_aux <= 1;
             out <= inB;
         end
 
         4'b0010: begin                                                 // A + B
-            done_aux <= 1;
             sum_sub <= 1;
             out <= out_add_sub;
         end
 
         4'b0011: begin                                                 // A - B
-            done_aux <= 1;
             sum_sub <= 0;
             out <= out_add_sub;
         end
 
         4'b0100: begin                                                 // A * B
-            done_aux <= 1;
             complex_real <= 1;
             out <= out_mult;
-        end
-
-        4'b0101: begin                                                 // A / B
-            done_aux <= 1;
-            complex_real <= 1;
-            out <= out_div;
         end
 
         4'b0110: begin                                                 // RE(A) * RE(B), IM(A) * IM(B)
-            done_aux <= 1;
             complex_real <= 0;
             out <= out_mult;
-        end
-
-        4'b0111: begin                                                 // RE(A) / RE(B), IM(A) / IM(B)
-            done_aux <= 1;
-            complex_real <= 0;
-            out <= out_div;
-            done_aux <= 1;
         end
 
         4'b1000: begin                                                 // A == B
             if( Real_A == Real_B && Im_A == Im_B )
-            begin
-                done_aux <= 1;
                 out <= 64'b01;
-            end
             else
                 out <= 0;
         end
         
         4'b1001: begin                                                 // { MOD(A), ANG(A) }
-            done_aux <= 1;
             mod_A_B <= 1;
             out <= out_mod;
         end
 
         4'b1010: begin                                                 // { MOD(B), ANG(B) }
-            done_aux <= 1;
             mod_A_B <= 0;
             out <= out_mod;
         end

@@ -6,66 +6,69 @@ module mod(
             input [31:0] Real_B,
             input [31:0] Im_A,
             input [31:0] Im_B,
+            output done,
             output [63:0] out
 );
 
 reg [63:0]  out_aux;
 
-reg [63:0]  sqrt_aux_A,
-            sqrt_aux_B,
-            M;
+reg [63:0]  M;
 
-wire [31:0] sqrt_A,
-            sqrt_B;
+wire [31:0] mod_A,
+            mod_B,
+            theta_A,
+            theta_B;
 
 reg theta;
 
+reg done_aux;
+
+assign done = done_aux;
 assign out = out_aux;
 
-sqrt_datapath  sqrt_datapath_A(
-					.clock( clock ),		// master clock
-					.reset( reset ),		// synch reset, active high
-					.start( start ),		// start a new sqrt
-					.stop( stop ),			// load output register
-					.xin( sqrt_aux_A ),		// argument
-					.sqrt( sqrt_A )	        // Square root
-				);
+rec2pol rec2pol_A( 
+                .clock( clock ),
+				.reset( reset ),
+				.enable( enable ),             
+				.start( start ),               
+				.x( Real_A ),           // X component, 16Q16                      
+				.y( Im_A ),             // Y component, 16Q16                        
+				.mod( mod_A ),          // Modulus, 16Q16                            
+				.angle( theta_A )       // Angle in degrees, 8Q24                
+			  );
 
-sqrt_datapath  sqrt_datapath_B(                                                 //CORRIGIR TAMAMHOS NO SQRT_DATAPATH
-					.clock( clock ),		// master clock
-					.reset( reset ),		// synch reset, active high
-					.start( start ),		// start a new sqrt
-					.stop( stop ),			// load output register
-					.xin( sqrt_aux_B ),		// argument
-					.sqrt( sqrt_B )	        // Square root
-				);
+rec2pol rec2pol_B( 
+                .clock( clock ),
+				.reset( reset ),
+				.enable( enable ),             
+				.start( start ),               
+				.x( Real_A ),           // X component, 16Q16                       
+				.y( Im_A ),             // Y component, 16Q16                      
+				.mod( mod_B ),          // Modulus, 16Q16                      
+				.angle( theta_B )       // Angle in degrees, 8Q24               
+			  );
 
 always@(posedge clock)
 if ( reset )
 begin
-    sqrt_aux_A <= 0;
-    sqrt_aux_B <= 0;
     M <= 0;
     theta <= 0;
 end
 else
 begin
-
-    sqrt_aux_A <= ( Real_A * Real_A ) + ( Im_A * Im_A );
-    sqrt_aux_B <= ( Real_B * Real_B ) + ( Im_B * Im_B );
-
     if( A_B )
     begin
-        M <= sqrt_A;
-        theta <= $atan2( Im_A , Real_A );
+        M <= mod_A;
+        theta <= theta_A;
     end
     else
     begin
-        M <= sqrt_B;
-        theta <= $atan2( Im_B , Real_B );
+        M <= mod_B;
+        theta <= theta_B;
     end
 
-        out_aux <= {M , theta};                                   
+        out_aux <= {M , theta};     
+        done_aux <= 1;                              
 end
 
 endmodule

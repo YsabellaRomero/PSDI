@@ -6,6 +6,7 @@ module mult(
             input [31:0] Real_B,
             input [31:0] Im_A,
             input [31:0] Im_B,
+            output done,
             output [63:0] out
 );
 
@@ -19,6 +20,9 @@ reg [63:0]  real_aux_1,
             im_aux_1,
             im_aux_2;
 
+reg done_aux;
+
+assign done = done_aux;
 assign out = out_aux;
 
 always@(posedge clock)
@@ -54,6 +58,7 @@ begin
     end
 
     out_aux <= {real_aux, im_aux};
+    done_aux <= 1;
 end
 
 endmodule

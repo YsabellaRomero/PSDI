@@ -6,6 +6,7 @@ module sumsub(
                 input [31:0] Im_A,
                 input [31:0] Im_B,
                 input sum_sub,              //if sum_sub = 1 we're dealing with sum, else with sub
+                output done,
                 output [63:0] out
 );
 
@@ -14,6 +15,9 @@ reg [63:0]  out_aux;
 reg [31:0]  aux_Real,
             aux_Im;
 
+reg done_aux;
+
+assign done = done_aux;
 assign out = out_aux;
 
 always@(posedge clock)
@@ -36,6 +40,7 @@ begin
     end
 
     out_aux <= {aux_Real,aux_Im};
+    done_aux <= 1;
 end
 
 endmodule
