@@ -17,7 +17,8 @@ reg [31:0]  Real_A,
 
 reg         sum_sub,
             complex_real,
-            mod_A_B;
+            mod_A_B,
+			maxclock;
 
 wire [63:0] out_add_sub,
             out_mult,
@@ -113,6 +114,7 @@ begin
 	end
 	4'b0001:                                                     // A
 	begin 
+		maxclock <= 1;
 		if ( done || reset ) 
 		begin
 			done <= 0;
@@ -135,7 +137,8 @@ begin
 		end
 	end
 		
-	4'b0010: begin 
+	4'b0010: begin 												// B
+		maxclock <= 1;
 		if ( alux_done || done || reset ) 
 		begin
 			done <= 0;
@@ -155,9 +158,10 @@ begin
 		end
 	end
 		
-	4'b0011: 
+	4'b0011: 												  // A + B
 	begin
-			if ( alux_done || done || reset ) 
+		maxclock <= 2;
+		if ( alux_done || done || reset ) 
 		begin
 			done <= 0;
 			counter <= 0;
@@ -176,7 +180,7 @@ begin
 		end
 	end
 
-	4'b0100: 
+	4'b0100: 												// A - B
 	begin
 		if ( alux_done || done || reset ) 
 		begin
@@ -197,7 +201,7 @@ begin
 		end
 	end
 
-	4'b0101: 
+	4'b0101: 											 	// A * B
 	begin
 		if ( alux_done || done || reset ) 
 		begin
