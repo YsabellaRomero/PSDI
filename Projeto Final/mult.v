@@ -6,7 +6,6 @@ module mult(
             input [31:0] Real_B,
             input [31:0] Im_A,
             input [31:0] Im_B,
-            output done,
             output [63:0] out
 );
 

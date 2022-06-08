@@ -28,10 +28,13 @@ wire [63:0] outA,
 
 wire done;
 
-wire [63:0] result;
+wire [63:0] result, 
+            out_ram;
 
 reg [63:0]  outA_aux,
             outB_aux;
+
+reg maxclock;
 
 
 reg_bank reg_bank_1(  
@@ -54,16 +57,27 @@ reg_bank reg_bank_1(
 
 
 ALUX ALUX_1(
-                    .clock(clock),              
-                    .reset(reset),             
-                    .inA(outA_aux),            
-                    .inB(outB_aux),                  
-                    .opr(opr),                   
-                    .start(start),          
-                    .outAB(result),                    
-                    .done(done)
+                    .clock( clock ),              
+                    .reset( reset ),             
+                    .inA( outA_aux ),            
+                    .inB( outB_aux ),                  
+                    .opr( opr ),                   
+                    .start( start ),          
+                    .outAB( result ),                    
+                    .done( done )
  );
 
+
+controller controller_1(
+                    .clock( clock ), 				
+				            .reset( reset ),
+				            .maxclock( maxclock ),
+				            .opr( opr ),
+				            .done( done ),
+                    .start( start ),
+				            .out_alux( result ),
+				            .out( out_ram )
+);
 
 //---------------------------------------------------
 // Setup initial signals
@@ -78,7 +92,8 @@ begin
   cnstB = 1'b0;
   enrregA = 1'b0;
   enrregB = 1'b0;
-  opr = 4'b1001;          // 0000 = A; 0001 = B; 0010 = sum; 0011 = sub; ...
+  opr = 4'b0000;          // 0000 = A; 0001 = B; 0010 = sum; 0011 = sub; ...
+  maxclock = 1'b1;
 end
 
 //---------------------------------------------------
@@ -115,12 +130,13 @@ begin
         cnstA = 1'b0;
         cnstB = 1'b0; 
         opr = 4'b0000;            // 0000 = A; 0001 = B; 0010 = sum; 0011 sub; ...
+        maxclock = 1'b1;
         i_aux = i;
         execbr(in_aux, i_aux);
         #10
         outA_aux = outA;
         outB_aux = outB;
-        $display("Obtained: %d", result);
+        $display("Initial: %h, Expected: %h, Obtained: %h", in, result, out_ram);
         in_aux = in_aux+'b10000;
     end
     $stop;

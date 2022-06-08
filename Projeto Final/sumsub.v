@@ -6,7 +6,6 @@ module sumsub(
                 input [31:0] Im_A,
                 input [31:0] Im_B,
                 input sum_sub,              //if sum_sub = 1 we're dealing with sum, else with sub
-                output done,
                 output [63:0] out
 );
 
