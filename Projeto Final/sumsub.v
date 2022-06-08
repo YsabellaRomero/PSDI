@@ -14,9 +14,6 @@ reg [63:0]  out_aux;
 reg [31:0]  aux_Real,
             aux_Im;
 
-reg done_aux;
-
-assign done = done_aux;
 assign out = out_aux;
 
 always@(posedge clock)
@@ -39,7 +36,6 @@ begin
     end
 
     out_aux <= {aux_Real,aux_Im};
-    done_aux <= 1;
 end
 
 endmodule

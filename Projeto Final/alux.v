@@ -19,7 +19,8 @@ reg         sum_sub,
             complex_real,
             mod_A_B,
             maxclock,
-            done_alux;
+            done_alux,
+            enable;
 
 wire [63:0] out_add_sub,
             out_mult,
@@ -61,6 +62,8 @@ mod mod_1(
                     .Real_A( Real_A ),
                     .Real_B( Real_B ),
                     .Im_A( Im_A ),
+                    .start( start ),
+                    .enable( enable ),
                     .Im_B( Im_B ),
                     .out( out_mod )
 );
@@ -78,6 +81,8 @@ begin
     sum_sub <= 1;
     complex_real <= 1;
     mod_A_B <= 1;
+    out_alux <= 0;
+    enable <= 0;
 end
 else
 begin
@@ -102,21 +107,25 @@ begin
         4'b0010: begin                                                 // A + B
             sum_sub <= 1;
             out_alux <= out_add_sub;
+            done_alux <= 1;
         end
 
         4'b0011: begin                                                 // A - B
             sum_sub <= 0;
             out_alux <= out_add_sub;
+            done_alux <= 1;
         end
 
         4'b0100: begin                                                 // A * B
             complex_real <= 1;
             out_alux <= out_mult;
+            done_alux <= 1;
         end
 
         4'b0110: begin                                                 // RE(A) * RE(B), IM(A) * IM(B)
             complex_real <= 0;
             out_alux <= out_mult;
+            done_alux <= 1;
         end
 
         4'b1000: begin                                                 // A == B
@@ -130,16 +139,21 @@ begin
         
         4'b1001: begin                                                 // { MOD(A), ANG(A) }
             mod_A_B <= 1;
+            enable <= 1;
             out_alux <= out_mod;
+            done_alux <= 1;
         end
 
         4'b1010: begin                                                 // { MOD(B), ANG(B) }
             mod_A_B <= 0;
+            enable <= 1;
             out_alux <= out_mod;
+            done_alux <= 1;
         end
         
         default: begin
             out_alux <= 64'b0;
+            done_alux <= 1;
         end
 
         endcase
@@ -148,6 +162,7 @@ begin
         begin
             outAB <= out_alux;
             done_alux <= 0;
+            out_alux <= 0;
         end
         
     end

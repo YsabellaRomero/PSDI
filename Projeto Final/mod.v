@@ -6,6 +6,8 @@ module mod(
             input [31:0] Real_B,
             input [31:0] Im_A,
             input [31:0] Im_B,
+            input enable,
+            input start,
             output [63:0] out
 );
 
@@ -67,7 +69,7 @@ begin
     end
 
         out_aux <= {M , theta};     
-        done_aux <= 1;                              
+        done_aux <= 1;                        
 end
 
 endmodule

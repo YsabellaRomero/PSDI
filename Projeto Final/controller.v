@@ -1,17 +1,17 @@
 module controller(
-				 input clock, 				// master clock rising edge 
-				 input reset,
-				 input maxclock,
-				 input [03:0] opr,
-				 input done,
-				 input start,
-				 input [63:0] out_alux,
-				 output [63:0] out
+				 input 			clock, 				// master clock rising edge 
+				 input 			reset,
+				 input [ 5:0] 	maxclock,
+				 input [03:0] 	opr,
+				 input 			done,
+				 input 			start,
+				 input [63:0] 	out_alux,
+				 output [63:0]	out
 				);
 
 reg [3:0] 	state;
 reg [63:0]	out_ram;
-reg counter;	
+reg [ 5:0]	counter;	
 
 //Symbolic state names
 parameter S0 = 4'b0000;			// Initial state
@@ -86,7 +86,7 @@ begin
 	end
 		
 	S3: begin
-			if ( done || reset ) 
+		if ( done || reset ) 
 		begin
 			counter <= 0;
 			state <= S0;

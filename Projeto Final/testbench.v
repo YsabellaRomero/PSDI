@@ -34,7 +34,7 @@ wire [63:0] result,
 reg [63:0]  outA_aux,
             outB_aux;
 
-reg maxclock;
+reg [ 5:0] maxclock;
 
 
 reg_bank reg_bank_1(  
@@ -93,7 +93,7 @@ begin
   enrregA = 1'b0;
   enrregB = 1'b0;
   opr = 4'b0000;          // 0000 = A; 0001 = B; 0010 = sum; 0011 = sub; ...
-  maxclock = 1'b1;
+  maxclock = 6'b1;
 end
 
 //---------------------------------------------------
@@ -103,7 +103,6 @@ begin
     forever
         # (CLOCK_PERIOD / 2 ) clock = ~clock;
 end
-
 
 // Apply reset:
 initial
@@ -129,14 +128,14 @@ begin
         enrregB = 1'b1;    
         cnstA = 1'b0;
         cnstB = 1'b0; 
-        opr = 4'b0000;            // 0000 = A; 0001 = B; 0010 = sum; 0011 sub; ...
-        maxclock = 1'b1;
+        opr = 4'b1001;            // 0000 = A; 0001 = B; 0010 = sum; 0011 sub; ...
+        maxclock = 6'b100110;
         i_aux = i;
         execbr(in_aux, i_aux);
         #10
         outA_aux = outA;
         outB_aux = outB;
-        $display("Initial: %h, Expected: %h, Obtained: %h", in, result, out_ram);
+        $display("Initial: %h, Expected: %h, Obtained: %h", in_aux, result, out_ram);
         in_aux = in_aux+'b10000;
     end
     $stop;
