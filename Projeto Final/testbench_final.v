@@ -1,11 +1,11 @@
 `timescale 1ns / 1ps
 
-module testbench;
+module testbench_final;
 
 initial
 begin
-  $dumpfile("mysimdata.vcd");// The filename with the waveform data
-  $dumpvars(0, testbench ); // The root node to dump end
+  $dumpfile("mysimdata_final.vcd");// The filename with the waveform data
+  $dumpvars(0, testbench_final ); // The root node to dump end
 end
 
 // General parameters 
@@ -26,13 +26,18 @@ reg [ 3:0]  seloutA,
 wire [63:0] outA,
             outB;
 
+reg [63:0] in_aux;
+
 wire done;
+
+reg [ 3:0] i;
 
 wire [63:0] result, 
             out_ram;
 
 reg [ 5:0] maxclock;
 
+wire [79:0] variable_aux;
 
 reg_bank reg_bank_1(  
                     .clock( clock ), 
@@ -67,13 +72,18 @@ ALUX ALUX_1(
 
 controller controller_1(
                     .clock( clock ), 				
-				            .reset( reset ),
-				            .maxclock( maxclock ),
-				            .opr( opr ),
-				            .done( done ),
+				    .reset( reset ),
+				    .maxclock( maxclock ),
+				    .opr( opr ),
+				    .done( done ),
                     .start( start ),
-				            .out_alux( result ),
-				            .out( out_ram )
+				    .out_alux( result ),
+				    .out( out_ram )
+);
+
+variables variables_1(
+                    .i( i ),
+                    .word( variable_aux )
 );
 
 //---------------------------------------------------
@@ -89,8 +99,8 @@ begin
   cnstB = 1'b0;
   enrregA = 1'b0;
   enrregB = 1'b0;
-  opr = 4'b0000;          // 0000 = A; 0001 = B; 0010 = sum; 0011 = sub; ...
-  maxclock = 6'b1;
+  opr = 4'b0000;          
+  maxclock = 6'b0;
 end
 
 //---------------------------------------------------
@@ -110,38 +120,23 @@ end
 
 //----------------------------------------------------
 // Test the inputs and outputs of the register bank
-integer i;
+integer j;
 reg [ 3:0] i_aux;
-reg [63:0] in_aux;
 initial
 begin
-    in_aux = 12321978053717715840;
 
-    for (i=0; i<16; i=i+1)
+    for (j=0; j<16; j=j+1)
     begin
         #10
 
-        //------------- User edits inputs manually ---------------
-        endwreg = 2'b00;
-        enrregA = 1'b1;
-        enrregB = 1'b1;    
-        cnstA = 1'b0;
-        cnstB = 1'b0; 
-        opr = 4'b1001;            // 0000 = A; 0001 = B; 0010 = sum; 0011 sub; ...
-        maxclock = 6'b100110;
-        //--------------------------------------------------------
+        i_aux = j;
+        i = j;
+        execbr(variable_aux, i_aux);
 
-        i_aux = i;
-        execbr(in_aux, i_aux);
-        #10
+        #40
 
-        $display("Initial: %h", in_aux);
-        $display("Output A stored at the bank of registers: %h", outA);
-        $display("Output B stored at the bank of registers: %h", outB);
-        $display("Result obtained after ALUX: %h", result);
-        $display("Value stored at the data RAM %h", out_ram);
+        $display("Initial: %h, Expected: %h, Obtained: %h", in, result, out_ram);
 
-        in_aux = in_aux+'b10000;
         in = result;
     end
     $stop;
@@ -149,22 +144,29 @@ begin
 end
 
 task execbr;
-input [63:0] inA;
-input [ 3:0] i;
+input [79:0] variable_aux;
+input [ 3:0] i_aux;
 begin
-  in = inA;               // Apply operands
+  in = variable_aux[79:16];         // Apply operands
+  opr = variable_aux[15:12];
+  maxclock = variable_aux[11:6];
+  endwreg = variable_aux[5:4];
+  enrregA = variable_aux[3];
+  enrregB = variable_aux[2];  
+  cnstA = variable_aux[1];
+  cnstB = variable_aux[0];
+
   @(posedge clock);
   regwen = 1'b1;
-  selwreg = i;
+  selwreg = i_aux;
   start = 1'b1;
   #10
   @(negedge clock);
   regwen = 1'b0;   
-  seloutA = i;
-  seloutB = i;             
+  seloutA = i_aux;
+  seloutB = i_aux;             
 end  
 endtask
-
 
 endmodule
 

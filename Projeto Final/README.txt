@@ -1,0 +1,23 @@
+Para este projeto, foi decidido criar 2 testbenches:
+
+➜ testbench.v: Verifica se a palavra à entrada do banco de registos é guardada corretamente no mesmo. Além disso, este testbench verifica se o resultado obtido na ALU está correto e consequentemente é atualizado o banco de registos com o mesmo ao fazer-se in = result na linha 145. Por fim, também é guardado o resultado numa memória RAM de dados e aqui é verificado se o valor guardado na mesma corresponde ao resultado obtido da ALU. O valor inicial de entrada é 12321978053717715840 e depois é incrementado mais 16 em cada ciclo. Outras variáveis de entrada como endwreg, enregA, cnstA, ..., são alteradas neste ficheiro, dando o utilizador poder para fazer os testes que desejar.
+
+➜ testbench_final.v: A lógica é essencialmente a mesma que no testbench.v, no entanto aqui é usado é utilizado um ficheiro (variables.v) onde foi criado uma matriz que representa um conjunto de palavras de entrada + operação a realizar + número de ciclos máximo que tal operação pode realizar + valor de endwreg + valor de engregA + valor de enregB + valor de cnstA + valor de cnstB. Assim a única "preocupação" do utilizador é simplesmente pôr o programa a correr sem fazer testes com valores diferentes. Assim sendo, escreveu-se uma linha onde permite o utilizador verificar a palavra de entrada (que será atualizada no banco de registos após a operação através da linha 140), e também verificar o resultado obtido da ALU e o valor armazenado na memória RAM de dados.
+
+
+
+Relativamente ao código RTL:
+
+➜ reg_bank: Este módulo está encarregue de preencher o banco de registros. Da linha 32 à 40, são criadas 9 conjuntos de palavras pré-definidas (e guardadas em conjunto como uma matriz, regs_const) que serão utilizadas na parte de leitura da palavra se e só se cnstB for igual a 1. Caso contrário, a palavra a ser lida será relativa à que "entrou" no banco de registos. As saídas A e/ou B só serão atualizadas se enrregA/enrregB for igual a 1. Caso contrário, serão guardados 64 bits a 0. Relativamente à parte da escrita, esta só funcionará se regwen for igual a 1 (caso contrário, estaremos a lidar com a funcionalidade de leitura), e aqui decide-se como os dados serão atualizados, sendo que existem 4 opções: (endwreg = 00) a palavra de entrada é guardada exatamente como entra no banco de registos, (endwreg = 10) a parte imaginária da palavra de entrada é colocada a 0's, (endwreg = 01) a parte real da palavra de entrada é colocada a 0's e (endwreg = 11) a parte real e imaginária da palavra de entrada são trocadas.
+
+➜ alux.v: Este é o módulo encarregue de realizar a operação desejada. Primeiramente, a operação só é realizada se start for igual a 1 e supondo que o utilizador quer ver resultados, essa variável está igualada a 1 para todas as palavras + instruções, na tas execbr de ambos os testbenches. Dentro dessa condição é realizada a operação indicada e isto porque foi instanciado os três módulos que estão encarregues de 6 das 9 opções de operação (no ficheiro foi identificado o que cada operação faz). É de notar que o módulo sumsub está encarregue de fazer soma se sum_sub for igual a 1 (caso contrário será subtração), o módulo mult de realizar uma multiplicação complexa se complex_real for igual a 1 (caso contrário será uma multiplicação real), e o módulo mod de realizar uma conversão para coordenadas polares da palavra A se mod_A_B = 1 (senão será feito para a palavra B). Uma vez a operação ter terminado, será atualizado o valor de saída deste módulo (outAB) com o resultado e o done com o valor 1. Esta última parte é importante pois esses valores serão utilizados como valores de entrada para um último módulo denominado de controller.v.
+
+➜ controller.v: Este módulo é destinado ao funcionamento da máquina de estados para a ALU. Existem então 10 estados, sendo o primeiro (S0) destinado ao estado inicial (começo e recomeço), e os restantes para para as 9 operações permitidas. Basicamente, quando só existe uma transição de S0 para o estado respetivo à operação, quando start for igual a 1. Caso contrário, iremos permanecer no estado inicial. Relativamente à transição de qualquer outro estado para S0, isso só acontece em 2 cenários: se reset ou done for igual a 1, ou então se o número de ciclos de relógio permitido para a determinada operação já tiver sido atingido. Neste segundo cenário, a variável done é forçosamente igualada a 1 para o resultado ser atualizado e retornarmos ao estado inicial.
+
+
+Relativamente aos restantes módulos (ATAN_ROM, ITERCOINTER, MODSCALE, rec2pol) servem meramente para o módulo mod, de modo a realizar a operação desejada.
+
+
+Autores:
+Ysabella Romero - 201706655
+Tulio Soares - 201800165

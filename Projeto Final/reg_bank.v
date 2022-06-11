@@ -60,8 +60,8 @@ begin
 
     begin
 
-        Real <= inA[63:32];                       // Real part of register selwreg[i]
-        Im <= inA[31:0];                          // Imaginary part of register selwreg[i]
+        Real <= inA[63:32];                                 // Real part of register selwreg[i]
+        Im <= inA[31:0];                                    // Imaginary part of register selwreg[i]
 
 	    case ( endwreg )
             2'b00: begin                                    // Write on both data fields
@@ -92,12 +92,12 @@ begin
             if( cnstA ) 
             begin                   
                 if( seloutA > 8 )
-                    outA <= regs_const[seloutA-9];                // Load the output port A with the predefined constant
+                    outA <= regs_const[seloutA-9];                  // Load the output port A with the predefined constant
                 else
                     outA <= regs_const[seloutA];
             end
             else 
-                outA <= regs_bank[seloutA];                 // Load output port A with data from register
+                outA <= regs_bank[seloutA];                         // Load output port A with data from register
         end
 
         if( enrregB )
@@ -110,8 +110,9 @@ begin
                     outB <= regs_const[seloutB];
             end
             else
-                outB <= regs_bank[seloutB];                 // Load output port B with data from register
+                outB <= regs_bank[seloutB];                         // Load output port B with data from register
         end
+        
     end
 end
 

@@ -49,9 +49,11 @@ begin
 			state <= 4'b0000;
 	end
 	S1: begin 
+
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 
@@ -71,6 +73,7 @@ begin
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 
@@ -89,6 +92,7 @@ begin
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 
@@ -107,6 +111,7 @@ begin
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 
@@ -125,6 +130,7 @@ begin
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 
@@ -143,6 +149,7 @@ begin
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 
@@ -161,6 +168,7 @@ begin
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 
@@ -179,6 +187,7 @@ begin
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 
@@ -197,6 +206,7 @@ begin
 		if ( done || reset ) 
 		begin
 			counter <= 0;
+			out_ram <= out_alux;
 			state <= S0;
 		end
 		
