@@ -81,7 +81,6 @@ begin
     sum_sub <= 1;
     complex_real <= 1;
     mod_A_B <= 1;
-    out_alux <= 0;
     enable <= 0;
 end
 else

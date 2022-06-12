@@ -39,7 +39,7 @@ module ATAN_ROM(
 			   );
 		
 parameter ROMSIZE = 32;
-parameter ATANLUT_FILENAME = "./atanLUTd.hex";	
+parameter ATANLUT_FILENAME = "./atanLUTd.dat";	
 
 reg [31:0] atanLUT[ 0 : ROMSIZE-1 ];	
 initial

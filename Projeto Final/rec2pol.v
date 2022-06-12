@@ -9,9 +9,7 @@ module rec2pol(
 				output signed [31:0] angle // Angle in degrees, 8Q24
 			  );
 			  
-			   
-// ADD YOUR RTL CODE HERE	
-
+              
 //Registers
 reg signed [33:0]			xr,
 							yr;
@@ -19,7 +17,6 @@ reg signed [33:0]			xr,
 reg signed [31:0]			zr;
 
 //Local wires
-
 wire signed [33:0]			sr1,
 							sr2, 
 							xr_aux;
